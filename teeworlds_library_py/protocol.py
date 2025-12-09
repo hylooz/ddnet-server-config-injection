@@ -1,0 +1,130 @@
+class _States:
+	def __init__(self):
+		self.STATE_OFFLINE = 0,
+		self.STATE_CONNECTING = 1,
+		self.STATE_LOADING = 2,
+		self.STATE_ONLINE = 3,
+		self.STATE_DEMOPLAYBACK = 4,
+		self.STATE_QUITTING = 5,
+		self.STATE_RESTARTING = 6
+
+class _Game:
+	def __init__(self):
+		self.EX = 0
+		self.SV_MOTD = 1
+		self.SV_BROADCAST = 2
+		self.SV_CHAT = 3
+		self.SV_KILLMSG = 4
+		self.SV_SOUNDGLOBAL = 5
+		self.SV_TUNEPARAMS = 6
+		self.SV_EXTRAPROJECTILE = 7
+		self.SV_READYTOENTER = 8
+		self.SV_WEAPONPICKUP = 9
+		self.SV_EMOTICON = 10
+		self.SV_VOTECLEAROPTIONS = 11
+		self.SV_VOTEOPTIONLISTADD = 12
+		self.SV_VOTEOPTIONADD = 13
+		self.SV_VOTEOPTIONREMOVE = 14
+		self.SV_VOTESET = 15
+		self.SV_VOTESTATUS = 16
+		self.CL_SAY = 17
+		self.CL_SETTEAM = 18
+		self.CL_SETSPECTATORMODE = 19
+		self.CL_STARTINFO = 20
+		self.CL_CHANGEINFO = 21
+		self.CL_KILL = 22
+		self.CL_EMOTICON = 23
+		self.CL_VOTE = 24
+		self.CL_CALLVOTE = 25
+		self.CL_ISDDNETLEGACY = 26
+		self.SV_DDRACETIMELEGACY = 27
+		self.SV_RECORDLEGACY = 28
+		self.UNUSED = 29
+		self.SV_TEAMSSTATELEGACY = 30
+		self.CL_SHOWOTHERSLEGACY = 31
+		self.NUM = 32
+
+class _System:
+	def __init__(self):
+		self.NETMSG_EX = 0
+		self.NETMSG_INFO = 1
+		self.NETMSG_MAP_CHANGE = 2
+		self.NETMSG_MAP_DATA = 3
+		self.NETMSG_CON_READY = 4
+		self.NETMSG_SNAP = 5
+		self.NETMSG_SNAPEMPTY = 6
+		self.NETMSG_SNAPSINGLE = 7
+		self.NETMSG_SNAPSMALL = 8
+		self.NETMSG_INPUTTIMING = 9
+		self.NETMSG_RCON_AUTH_STATUS = 10
+		self.NETMSG_RCON_LINE = 11
+		self.NETMSG_AUTH_CHALLANGE = 12
+		self.NETMSG_AUTH_RESULT = 13
+		self.NETMSG_READY = 14
+		self.NETMSG_ENTERGAME = 15
+		self.NETMSG_INPUT = 16
+		self.NETMSG_RCON_CMD = 17
+		self.NETMSG_RCON_AUTH = 18
+		self.NETMSG_REQUEST_MAP_DATA = 19
+		self.NETMSG_AUTH_START = 20
+		self.NETMSG_AUTH_RESPONSE = 21
+		self.NETMSG_PING = 22
+		self.NETMSG_PING_REPLY = 23
+		self.NETMSG_ERROR = 24
+		self.NETMSG_RCON_CMD_ADD = 25
+		self.NETMSG_RCON_CMD_REM = 26
+		self.NUM_NETMSGS = 27
+		self.NETMSG_WHATIS = 65536
+		self.NETMSG_ITIS = 65537
+		self.NETMSG_IDONTKNOW = 65538
+		self.NETMSG_RCONTYPE = 65539
+		self.NETMSG_MAP_DETAILS = 65540
+		self.NETMSG_CAPABILITIES = 65541
+		self.NETMSG_CLIENTVER = 65542
+		self.NETMSG_PINGEX = 65543
+		self.NETMSG_PONGEX = 65544
+		self.NETMSG_CHECKSUM_REQUEST = 65545
+		self.NETMSG_CHECKSUM_RESPONSE = 65546
+		self.NETMSG_CHECKSUM_ERROR = 65547
+		self.NETMSG_REDIRECT = 65548
+		self.NETMSG_RCON_CMD_GROUP_START = 65549
+		self.NETMSG_RCON_CMD_GROUP_END = 65550
+		self.NETMSG_MAP_RELOAD = 65551
+		self.NETMSG_RECONNECT = 65552
+		self.NETMSG_MAPLIST_ADD = 65553
+		self.NETMSG_MAPLIST_GROUP_START = 65554
+		self.NETMSG_MAPLIST_GROUP_END = 65555
+		self.NETMSG_I_AM_NPM_PACKAGE = 65556
+
+class _NETMSG:
+	def __init__(self):
+		self.Game = _Game()
+		self.System = _System()
+
+class _SnapshotItemIDs:
+	def __init__(self):
+		self.OBJ_EX = 0
+		self.OBJ_PLAYER_INPUT = 1
+		self.OBJ_PROJECTILE = 2
+		self.OBJ_LASER = 3
+		self.OBJ_PICKUP = 4
+		self.OBJ_FLAG = 5
+		self.OBJ_GAME_INFO = 6
+		self.OBJ_GAME_DATA = 7
+		self.OBJ_CHARACTER_CORE = 8
+		self.OBJ_CHARACTER = 9
+		self.OBJ_PLAYER_INFO = 10
+		self.OBJ_CLIENT_INFO = 11
+		self.OBJ_SPECTATOR_INFO = 12
+		self.EVENT_COMMON = 13
+		self.EVENT_EXPLOSION = 14
+		self.EVENT_SPAWN = 15
+		self.EVENT_HAMMERHIT = 16
+		self.EVENT_DEATH = 17
+		self.EVENT_SOUND_GLOBAL = 18
+		self.EVENT_SOUND_WORLD = 19
+		self.EVENT_DAMAGE_INDICATOR = 20
+
+States = _States()
+NETMSG = _NETMSG()
+SnapshotItemIDs = _SnapshotItemIDs()
