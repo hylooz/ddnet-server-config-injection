@@ -14,7 +14,7 @@ profile = {
 	},
 }
 
-client = Client("62.122.215.19", 8999, "test", profile)
+client = Client("127.0.0.1", 8303, "test", profile)
 
 @client.on("connected")
 def process_connected():
@@ -38,7 +38,7 @@ def process_message(data):
 		else:
 			print(f"[{client_id}]: {message}")
 	if data["message"].startswith("*say"):
-		client.game.Say(data["message"][7:])
+		client.game.Say(data["message"][5:])
 
 @client.on("broadcast")
 def process_broadcast(data):
