@@ -10,6 +10,7 @@ from .msg import MsgPacker, MsgUnpacker, unpackString, unpackInt
 import threading
 import asyncio
 import inspect
+import select
 import signal
 import socket
 import struct
@@ -25,10 +26,6 @@ messageTypes = [
 	["none, starts at 1", "SV_MOTD", "SV_BROADCAST", "SV_CHAT", "SV_KILL_MSG", "SV_SOUND_GLOBAL", "SV_TUNE_PARAMS", "SV_EXTRA_PROJECTILE", "SV_READY_TO_ENTER", "SV_WEAPON_PICKUP", "SV_EMOTICON", "SV_VOTE_CLEAR_OPTIONS", "SV_VOTE_OPTION_LIST_ADD", "SV_VOTE_OPTION_ADD", "SV_VOTE_OPTION_REMOVE", "SV_VOTE_SET", "SV_VOTE_STATUS", "CL_SAY", "CL_SET_TEAM", "CL_SET_SPECTATOR_MODE", "CL_START_INFO", "CL_CHANGE_INFO", "CL_KILL", "CL_EMOTICON", "CL_VOTE", "CL_CALL_VOTE", "CL_IS_DDNET", "SV_DDRACE_TIME", "SV_RECORD", "UNUSED", "SV_TEAMS_STATE", "CL_SHOW_OTHERS_LEGACY", "SV_DDRACE_TIME"],
 	["none, starts at 1", "INFO", "MAP_CHANGE", "MAP_DATA", "CON_READY", "SNAP", "SNAP_EMPTY", "SNAP_SINGLE", "INPUT_TIMING", "RCON_AUTH_STATUS", "RCON_LINE", "READY", "ENTER_GAME", "INPUT", "RCON_CMD", "RCON_AUTH", "REQUEST_MAP_DATA", "PING", "PING_REPLY", "RCON_CMD_ADD", "RCON_CMD_REMOVE"]
 ]
-#[
-	#["none, starts at 1", "SV_MOTD", "SV_BROADCAST", "SV_CHAT", "SV_KILL_MSG", "SV_SOUND_GLOBAL", "SV_TUNE_PARAMS", "SV_EXTRA_PROJECTILE", "SV_READY_TO_ENTER", "SV_WEAPON_PICKUP", "SV_EMOTICON", "SV_VOTE_CLEAR_OPTIONS", "SV_VOTE_OPTION_LIST_ADD", "SV_VOTE_OPTION_ADD", "SV_VOTE_OPTION_REMOVE", "SV_VOTE_SET", "SV_VOTE_STATUS", "CL_SAY", "CL_SET_TEAM", "CL_SET_SPECTATOR_MODE", "CL_START_INFO", "CL_CHANGE_INFO", "CL_KILL", "CL_EMOTICON", "CL_VOTE", "CL_CALL_VOTE", "CL_IS_DDNET", "SV_DDRACE_TIME", "SV_RECORD", "UNUSED", "SV_TEAMS_STATE", "CL_SHOW_OTHERS_LEGACY"],
-	#["none, starts at 1", "INFO", "MAP_CHANGE", "MAP_DATA", "CON_READY", "SNAP", "SNAP_EMPTY", "SNAP_SINGLE", "SNAPSMALL", "INPUT_TIMING", "RCON_AUTH_STATUS", "RCON_LINE", "AUTH_CHALLANGE", "AUTH_RESULT", "READY", "ENTER_GAME", "INPUT", "RCON_CMD", "RCON_AUTH", "REQUEST_MAP_DATA", "AUTH_START", "AUTH_RESPONSE", "PING", "PING_REPLY", "ERROR", "RCON_CMD_ADD", "RCON_CMD_REMOVE"]
-#]
 
 
 libVersion = "1.0"
@@ -107,13 +104,14 @@ class Client:
 		self.sock.bind(('0.0.0.0', 0))
 		self.sock.setblocking(False)
 
-		self.recieving = True
+		self.receiving = True
 
 		self.TKEN = bytes([255, 255, 255, 255])
 		self.time = time.time() + 2; # time (used for keepalives, start to send keepalives after 2 seconds)
 		self.lastSendTime = time.time()
 		self.lastRecvTime = time.time()
 
+		self.last_keepalive = 0
 		self.last_pred = 0
 		self.last_connect = 0
 		self.last_input = 0
@@ -367,7 +365,7 @@ class Client:
 		self.ack = self.lastCheckedChunkAck
 
 	def processIntervals(self):
-		while True:
+		while self.receiving:
 			current_time = time.time()
 			if(current_time - self.last_pred > 1/20 and self.is_pred):
 				if self.State == States.STATE_ONLINE:
@@ -399,10 +397,18 @@ class Client:
 					self.State = States.STATE_OFFLINE
 					print(f"Timed Out. (no packets received for {time.time() - self.lastRecvTime:.2f}s)")
 				self.last_timeout = current_time
+
+			if self.State == States.STATE_ONLINE:
+				if time.time() - self.time >= 0.5:
+					self.Flush()
+				if time.time() - self.last_keepalive >= 1:
+					self.SendControlMsg(0)
+					self.last_keepalive = time.time()
 			time.sleep(1/40)
 
 	def signal_handler(self, signum, frame):
 		print("disconnecting...")
+		self.receiving = False
 		self.SendControlMsg(4)
 		sys.exit(1)
 
@@ -444,6 +450,9 @@ class Client:
 		self.time = time.time() + 2
 
 		while True:
+			ready_to_read, _, _ = select.select([self.sock], [], [], 0.01)
+			if not ready_to_read:
+				continue
 			try:
 				packet, rinfo = self.sock.recvfrom(1400)
 				if self.State == 0 or rinfo != (self.host, self.port):
@@ -475,11 +484,7 @@ class Client:
 							client_version.AddString(f"DDNet 16.5.0; https://www.npmjs.com/package/teeworlds/v/{libVersion}")
 
 						i_am_npm_package = MsgPacker(0, True, 1)
-						netmsg_i_am_npm_package = self.UUIDManager.LookupType(NETMSG.System.NETMSG_I_AM_NPM_PACKAGE)
-						if netmsg_i_am_npm_package is not None:
-							i_am_npm_package.AddBuffer(netmsg_i_am_npm_package["hash"])
-						else:
-							print("NETMSG.System.NETMSG_I_AM_NPM_PACKAGE not found in UUIDManager")
+						i_am_npm_package.AddBuffer(self.UUIDManager.LookupType(NETMSG.System.NETMSG_I_AM_NPM_PACKAGE)["hash"])
 
 						i_am_npm_package.AddString(f"https://www.npmjs.com/package/teeworlds/v/{libVersion}")
 
@@ -784,13 +789,6 @@ class Client:
 				pass
 			except KeyboardInterrupt as e:
 				exit(0)
-
-			if self.State == States.STATE_ONLINE:
-				if time.time() - self.time >= 0.5:
-					self.Flush()
-				if time.time() - self.time >= 1:
-					self.time = time.time()
-					self.SendControlMsg(0)
 
 	def sendInput(self, input = None):
 		if (self.State != States.STATE_ONLINE):
